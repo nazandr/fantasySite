@@ -1,0 +1,11 @@
+.modal-backdrop {
+  position: static;
+}
+
+.modal-header {
+  background-color: rgba(56, 40, 40, 0.9);
+}
+
+.modal-body {
+  background-color: rgb(56, 40, 40, 0.9);
+}

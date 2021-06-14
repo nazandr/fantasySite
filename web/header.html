@@ -1,0 +1,32 @@
+{{ define "header" }}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+
+    <link href="/assets/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href={{ .CSS }}>
+    <link rel="stylesheet" href="assets/main.css">
+</head>
+
+<body>
+    <header class="mb-5">
+        <nav class="navbar fixed-top navbar-expand-lg navbar-dark fixed-top">
+            <div class="container-xxl">
+                <a href="#" class="navbar-brand">Dota 2 Fantacy league</a>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href=" #">Команда</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/collection">Коллекция</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    {{ end }}

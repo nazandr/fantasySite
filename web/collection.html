@@ -1,0 +1,23 @@
+{{template "header" . }}
+<section>
+    <div class="container-xxl">
+        <div class="row">
+            {{range .Cards }}
+            <div class="col py-2">
+                <div class="card text-white bg-dark" style="width: 18rem;">
+                    <img src="https://upload.wikimedia.org/wikipedia/ru/thumb/8/8e/%D0%9E%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_Dota_2.jpg/266px-%D0%9E%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_Dota_2.jpg "
+                        class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ .Name }}</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of
+                            the card's content.</p>
+                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</section>
+
+{{template "footer" . }}
