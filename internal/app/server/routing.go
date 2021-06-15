@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,6 +36,10 @@ func (s *Server) configureRouter() {
 	s.router.HandleFunc("/collection", s.collection()).Methods("GET")
 	s.router.HandleFunc("/singup", s.singUp()).Methods("POST")
 	s.router.HandleFunc("/singin", s.singIn()).Methods("POST")
+	s.router.HandleFunc("/logout", s.logOut()).Methods("GET")
+	s.router.HandleFunc("/disenchant", s.disenchant()).Methods("POST")
+	s.router.HandleFunc("/packs", s.packs()).Methods("GET")
+	s.router.HandleFunc("/openCommonPack", s.openCommonPack())
 }
 
 func (s *Server) setRequestId(next http.Handler) http.Handler {
@@ -73,13 +79,21 @@ func (s *Server) indexHandler() http.HandlerFunc {
 		data := struct {
 			Title string
 			CSS   string
+			User  *models.User
 			Auth  bool
 		}{
-			Title: "Dota 2 Fantacy",
+			Title: "Dota 2 Fantasy",
 			CSS:   "/assets/index.css",
 			Auth:  false,
 		}
 		a, _ := s.verify(rw, r)
+		if a {
+			user, err := s.userData(rw, r)
+			if err != nil {
+				return
+			}
+			data.User = user
+		}
 
 		data.Auth = a
 		if err := tpl.Execute(rw, data); err != nil {
@@ -99,9 +113,10 @@ func (s *Server) collection() http.HandlerFunc {
 			Title string
 			CSS   string
 			Auth  bool
-			Cards []models.PlayerCard
+			User  *models.User
+			Cards [][]models.PlayerCard
 		}{
-			Title: "Dota 2 Fantacy",
+			Title: "Коллекция",
 			CSS:   "/assets/collection.css",
 			Auth:  true,
 		}
@@ -110,15 +125,20 @@ func (s *Server) collection() http.HandlerFunc {
 		if !a {
 			http.Redirect(rw, r, "/", http.StatusSeeOther)
 		}
+		user, err := s.userData(rw, r)
+		if err != nil {
+			return
+		}
+		data.User = user
 
 		res, err := s.request("http://localhost:8080/auth/collection", "GET", token)
 		if err != nil {
 			s.logger.Info(err)
-			http.Redirect(rw, r, "/", http.StatusNotModified)
+			http.Redirect(rw, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 		defer res.Body.Close()
-		cards := &[]models.PlayerCard{}
+		cards := &[][]models.PlayerCard{}
 		if err := json.NewDecoder(res.Body).Decode(cards); err != nil {
 			http.Redirect(rw, r, "/", http.StatusSeeOther)
 			s.logger.Info(err)
@@ -132,6 +152,153 @@ func (s *Server) collection() http.HandlerFunc {
 	}
 }
 
+func (s *Server) disenchant() http.HandlerFunc {
+	type respond struct {
+		AcssesToken  string `json:"acsses_token"`
+		RefreshToken string `json:"refresh_token"`
+		ID           string `json:"card_id"`
+	}
+	return func(rw http.ResponseWriter, r *http.Request) {
+		a, token := s.verify(rw, r)
+
+		if !a {
+			http.Redirect(rw, r, "/", http.StatusFound)
+			return
+		}
+		resp := respond{
+			AcssesToken:  token.AcssesToken,
+			RefreshToken: token.RefreshToken,
+			ID:           r.FormValue("card_id"),
+		}
+		resp.ID = strings.TrimLeft(resp.ID, "ObjectID(\"")
+		resp.ID = strings.TrimRight(resp.ID, "\")")
+
+		res, err := s.request("http://localhost:8080/auth/disenchant", "POST", resp)
+		if err != nil {
+			s.logger.Info(err)
+			http.Redirect(rw, r, "/collection", http.StatusFound)
+			return
+		}
+		defer res.Body.Close()
+		http.Redirect(rw, r, "/collection", http.StatusFound)
+	}
+}
+func (s *Server) openCommonPack() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		a, token := s.verify(rw, r)
+
+		if !a {
+			http.Redirect(rw, r, "/", http.StatusFound)
+			return
+		}
+		res, err := s.request("http://localhost:8080/auth/openCommonPack", "POST", token)
+		if err != nil {
+			s.logger.Info(err)
+			http.Redirect(rw, r, "/collection", http.StatusFound)
+			return
+		}
+		defer res.Body.Close()
+
+		tpl := template.Must(template.ParseFiles(
+			"web/packs.html",
+			"web/header.html",
+			"web/footer.html",
+		))
+		data := struct {
+			Title string
+			CSS   string
+			User  *models.User
+			Auth  bool
+			Open  bool
+			Pack  *[]models.PlayerCard
+		}{
+			Title: "Паки",
+			Open:  true,
+			CSS:   "/assets/packs.css",
+			Auth:  true,
+		}
+
+		user, err := s.userData(rw, r)
+		if err != nil {
+			return
+		}
+		data.User = user
+
+		pack := &[]models.PlayerCard{}
+		if err := json.NewDecoder(res.Body).Decode(pack); err != nil {
+			http.Redirect(rw, r, "/", http.StatusFound)
+			s.logger.Info(err)
+			return
+		}
+		data.Pack = pack
+		if err := tpl.Execute(rw, data); err != nil {
+			s.logger.Info(err)
+		}
+	}
+}
+
+func (s *Server) packs() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		tpl := template.Must(template.ParseFiles(
+			"web/packs.html",
+			"web/header.html",
+			"web/footer.html",
+		))
+		data := struct {
+			Title string
+			CSS   string
+			User  *models.User
+			Open  bool
+			Auth  bool
+		}{
+			Title: "Паки",
+			// CSS:   "/assets/packs.css",
+			Auth: true,
+			Open: false,
+		}
+		a, _ := s.verify(rw, r)
+
+		if !a {
+			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			return
+		}
+		user, err := s.userData(rw, r)
+		if err != nil {
+			return
+		}
+		data.User = user
+
+		if err := tpl.Execute(rw, data); err != nil {
+			s.logger.Info(err)
+		}
+	}
+}
+
+func (s *Server) userData(rw http.ResponseWriter, r *http.Request) (*models.User, error) {
+	a, token := s.verify(rw, r)
+	user := &models.User{}
+	if !a {
+		http.Redirect(rw, r, "/", http.StatusSeeOther)
+		return user, fmt.Errorf("Unauthorized")
+	}
+	res, err := s.request("http://localhost:8080/auth/user", "GET", token)
+
+	if err != nil {
+		s.logger.Info(err)
+		http.Redirect(rw, r, "/", http.StatusTemporaryRedirect)
+		return user, err
+	}
+	defer res.Body.Close()
+	if err := json.NewDecoder(res.Body).Decode(user); err != nil {
+		http.Redirect(rw, r, "/", http.StatusSeeOther)
+		s.logger.Info(err)
+		return user, err
+	}
+
+	return user, nil
+}
+
+// Регистрация
 func (s *Server) singUp() http.HandlerFunc {
 	type request struct {
 		Email    string `json:"email"`
@@ -147,7 +314,7 @@ func (s *Server) singUp() http.HandlerFunc {
 		res, err := s.request("http://localhost:8080/singup", "POST", req)
 		if err != nil {
 			s.logger.Info(err)
-			http.Redirect(rw, r, "/", http.StatusNotModified)
+			http.Redirect(rw, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 		defer res.Body.Close()
@@ -173,6 +340,7 @@ func (s *Server) singUp() http.HandlerFunc {
 	}
 }
 
+// Вход
 func (s *Server) singIn() http.HandlerFunc {
 	type request struct {
 		Email    string `json:"email"`
@@ -188,13 +356,13 @@ func (s *Server) singIn() http.HandlerFunc {
 		res, err := s.request("http://localhost:8080/singin", "POST", req)
 		if err != nil {
 			s.logger.Info(err)
-			http.Redirect(rw, r, "/", http.StatusNotModified)
+			http.Redirect(rw, r, "/", http.StatusFound)
 			return
 		}
 		defer res.Body.Close()
 		token := &Token{}
 		if err := json.NewDecoder(res.Body).Decode(token); err != nil {
-			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			http.Redirect(rw, r, "/", http.StatusFound)
 			s.logger.Info(err)
 			return
 		}
@@ -210,8 +378,28 @@ func (s *Server) singIn() http.HandlerFunc {
 		}
 		http.SetCookie(rw, &cookie)
 
-		http.Redirect(rw, r, "/", http.StatusSeeOther)
+		http.Redirect(rw, r, "/", http.StatusFound)
 
+	}
+}
+
+func (s *Server) logOut() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		c := &http.Cookie{
+			Name:    "acsses_token",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		}
+
+		http.SetCookie(rw, c)
+		c = &http.Cookie{
+			Name:    "refresh_token",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		}
+
+		http.SetCookie(rw, c)
+		http.Redirect(rw, r, "/", http.StatusFound)
 	}
 }
 
@@ -244,15 +432,19 @@ func (s *Server) verify(rw http.ResponseWriter, r *http.Request) (bool, Token) {
 	}
 
 	token := Token{at.Value, rt.Value}
+	if token.AcssesToken == "" {
+		return false, Token{}
+	}
 	res, err := s.request("http://localhost:8080/verify", "GET", token)
 	if err != nil {
 		s.logger.Info(err)
+		return false, Token{}
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode == http.StatusOK {
-		token := &Token{}
-		if err := json.NewDecoder(res.Body).Decode(token); err != nil {
-			http.Redirect(rw, r, "/", http.StatusSeeOther)
+		t := &Token{}
+		if err := json.NewDecoder(res.Body).Decode(t); err != nil {
 			s.logger.Info(err)
 			return false, Token{}
 		}
@@ -267,7 +459,7 @@ func (s *Server) verify(rw http.ResponseWriter, r *http.Request) (bool, Token) {
 			Value: token.RefreshToken,
 		}
 		http.SetCookie(rw, &cookie)
-		return true, *token
+		return true, *t
 	}
 
 	return false, Token{}

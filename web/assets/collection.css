@@ -1,0 +1,11 @@
+.text-title {
+  color: #ffffffb5 !important;
+}
+
+.card-img-overlay {
+  background-color: rgba(101, 105, 109, 0.205);
+}
+
+.bg-transparent {
+  background-color: #00000080 !important;
+}

@@ -2,3 +2,19 @@ body {
   background-color: rgb(63, 60, 60);
   color: #f5f6f7;
 }
+
+.modal-footer {
+  background-color: rgba(63, 60, 60, 0.9);
+}
+
+.modal-backdrop {
+  position: static;
+}
+
+.modal-header {
+  background-color: rgba(63, 60, 60, 0.9);
+}
+
+.modal-body {
+  background-color: rgb(63, 60, 60, 0.9);
+}

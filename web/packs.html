@@ -1,0 +1,74 @@
+{{template "header" . }}
+<section>
+
+    <div class="container-xxl  my-5">
+        <div class="row justify-content-center">
+            <div class="col-2 p-2">
+                <h5>Паков: {{.User.Packs.Common}}</h5>
+            </div>
+            <div class="col-1">
+                <a href="/openCommonPack" class="btn btn-outline-warning">Открыть</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row ">
+        {{ if .Open }}
+        {{ range .Pack}}
+        <div class="col py-2">
+            <div class="card text-white bg-dark" style="width: 18rem;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Dendi_TI4.jpg/511px-Dendi_TI4.jpg"
+                    class="card-img-top" alt="...">
+                <div class="card-img-overlay h-100 d-flex flex-column justify-content-end">
+
+                    <div class="card-text bg-transparent bg-gradient shadow-lg p-3  rounded">
+                        <h4>{{ .Name }}</h4>
+                        <h6><small class="text-title">Команда: </small>{{ .Team }}</h6>
+                        {{if eq .Rarity 0}}
+                        <h6><small class="text-title">Редкость: </small>Common</h6>
+                        {{else if eq .Rarity 1}}
+                        <h6 class="text-primary"><small class="text-title">Редкость: </small>Rare</h6>
+                        {{else if eq .Rarity 2}}
+                        <h6 class="text-secondary"><small class="text-title">Редкость: </small>Epic</h6>
+                        {{else if eq .Rarity 2}}
+                        <h6 class="text-warning"><small class="text-title">Редкость: </small>Legend</h6>
+                        {{end}}
+
+                        {{range .Buffs}}
+                        <h6><small class="text-title">{{ .NameOfFild }}: </small>{{ .Multiplier}}</h6>
+                        {{end}}
+                        <a href="#" class="btn btn-outline-light btn-sm w-100" data-bs-toggle="modal"
+                            data-bs-target="#{{.Name}}">Распылить</a>
+                    </div>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="{{.Name}}" tabindex="-1" aria-labelledby="{{.Name}}Label"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered rounded">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="{{.Name}}Label">Распылить?</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-footer">
+                                    <form action="/disenchant" method="post">
+                                        <input type="hidden" readonly class="form-control-plaintext" name="card_id"
+                                            id="card" value={{ .Id }}>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            data-bs-dismiss="modal">Отменить</button>
+                                        <button type="submit" class="btn btn-outline-success">Распылить</button>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+</section>
+{{template "footer" . }}
