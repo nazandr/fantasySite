@@ -73,7 +73,7 @@ func (s *Server) indexHandler() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		tpl := template.Must(template.ParseFiles(
 			"web/index.html",
-			// "web/header.html",
+			"web/header.html",
 			"web/footer.html",
 		))
 		data := struct {
@@ -106,6 +106,7 @@ func (s *Server) collection() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		tpl := template.Must(template.ParseFiles(
 			"web/collection.html",
+			"web/card.html",
 			"web/header.html",
 			"web/footer.html",
 		))
@@ -159,15 +160,11 @@ func (s *Server) disenchant() http.HandlerFunc {
 		ID           string `json:"card_id"`
 	}
 	return func(rw http.ResponseWriter, r *http.Request) {
-		a, token := s.verify(rw, r)
+		cook := r.Cookies()
 
-		if !a {
-			http.Redirect(rw, r, "/", http.StatusFound)
-			return
-		}
 		resp := respond{
-			AcssesToken:  token.AcssesToken,
-			RefreshToken: token.RefreshToken,
+			AcssesToken:  cook[2].Value,
+			RefreshToken: cook[3].Value,
 			ID:           r.FormValue("card_id"),
 		}
 		resp.ID = strings.TrimLeft(resp.ID, "ObjectID(\"")
@@ -201,6 +198,7 @@ func (s *Server) openCommonPack() http.HandlerFunc {
 
 		tpl := template.Must(template.ParseFiles(
 			"web/packs.html",
+			"web/card.html",
 			"web/header.html",
 			"web/footer.html",
 		))
@@ -241,6 +239,7 @@ func (s *Server) packs() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		tpl := template.Must(template.ParseFiles(
 			"web/packs.html",
+			"web/card.html",
 			"web/header.html",
 			"web/footer.html",
 		))

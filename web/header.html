@@ -18,6 +18,7 @@
         <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div class="container-xxl">
                 <a href="/" class="navbar-brand">Dota 2 Fantasy league</a>
+                {{ if .Auth}}
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +38,72 @@
                     </ul>
                     <h5 class="px-5">Fantasy Coins: {{ .User.FantacyCoins }}</h5>
                     <a href="/logout" class="btn btn-outline-light mx-2">Выйти</a>
+                    {{ else }}
+
+                    <div class="d-flex">
+                        <button class="btn btn-outline-light mx-2" data-bs-toggle="modal"
+                            data-bs-target="#singinModal">Вход</button>
+                        <button class="btn btn-outline-light" data-bs-toggle="modal"
+                            data-bs-target="#singupModal">Регистрация</button>
+                    </div>
+
+                    <div class="modal fade" id="singinModal" tabindex="-1" aria-labelledby="singinModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="singinModalLabel">Вход</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="/singin" method="POST">
+                                        <div class="mb-3">
+                                            <label for="exampleInputEmail1" class="form-label">Почта</label>
+                                            <input type="email" class="form-control" id="inInputEmail1"
+                                                aria-describedby="emailHelp" name="email">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="exampleInputPassword1" class="form-label">Пароль</label>
+                                            <input type="password" class="form-control" id="inInputPassword1"
+                                                name="password">
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-light">Вход</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="singupModal" tabindex="-1" aria-labelledby="singupModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="singupModalLabel">Регистрация</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="/singup" method="POST">
+                                        <div class="mb-3">
+                                            <label for="exampleInputEmail1" class="form-label">Почта</label>
+                                            <input type="email" class="form-control" id="upInputEmail1"
+                                                aria-describedby="emailHelp" name="email">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="exampleInputPassword1" class="form-label">Пароль</label>
+                                            <input type="password" class="form-control" id="upInputPassword1"
+                                                name="password">
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-light">Зарегестрироваться</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{ end }}
                 </div>
             </div>
         </nav>

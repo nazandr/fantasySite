@@ -3,6 +3,10 @@ body {
   color: #f5f6f7;
 }
 
+.text-epic {
+  color: blueviolet;
+}
+
 .modal-footer {
   background-color: rgba(63, 60, 60, 0.9);
 }

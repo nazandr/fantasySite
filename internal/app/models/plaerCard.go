@@ -14,7 +14,8 @@ type PlayerCard struct {
 }
 
 type Buff struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	NameOfFild string             `bson:"name_of_fild"`
-	Multiplier float64            `bson:"multiplier"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
+	NameOfFild    string             `bson:"name_of_fild" json:"name_of_fild"`
+	DisplayedName string             `bson:"displayed_name" json:"displayed_name"`
+	Multiplier    int                `bson:"multiplier" json:"multiplier"`
 }
