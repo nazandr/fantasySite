@@ -27,7 +27,7 @@ type Token struct {
 }
 
 func (s *Server) configureRouter() {
-	fs := http.FileServer(http.Dir("/Users/andrey/projects/fantacySite/web/assets"))
+	fs := http.FileServer(http.Dir("web/assets"))
 
 	s.router.Use(s.setRequestId)
 	s.router.Use(s.loggerReq)
@@ -38,8 +38,10 @@ func (s *Server) configureRouter() {
 	s.router.HandleFunc("/singin", s.singIn()).Methods("POST")
 	s.router.HandleFunc("/logout", s.logOut()).Methods("GET")
 	s.router.HandleFunc("/disenchant", s.disenchant()).Methods("POST")
+	s.router.HandleFunc("/setFantasyTeam", s.setFantasyTeam()).Methods("POST")
 	s.router.HandleFunc("/packs", s.packs()).Methods("GET")
-	s.router.HandleFunc("/openCommonPack", s.openCommonPack())
+	s.router.HandleFunc("/openCommonPack", s.openCommonPack()).Methods("GET")
+	s.router.HandleFunc("/fantasyTeams", s.fantasyTeams()).Methods("GET")
 }
 
 func (s *Server) setRequestId(next http.Handler) http.Handler {
@@ -273,6 +275,102 @@ func (s *Server) packs() http.HandlerFunc {
 	}
 }
 
+func (s *Server) fantasyTeams() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		tpl := template.Must(template.ParseFiles(
+			"web/fantasy.html",
+			"web/fantasyTeamCard.html",
+			"web/header.html",
+			"web/footer.html",
+		))
+		data := struct {
+			Title       string
+			CSS         string
+			User        *models.User
+			Auth        bool
+			TodaysTeam  bool
+			CorePlayers [][][]models.PlayerCard
+			SupPlayers  [][][]models.PlayerCard
+		}{
+			Title: "Фэнтази команды",
+			// CSS:   "/assets/packs.css",
+			Auth:       true,
+			TodaysTeam: false,
+		}
+		a, _ := s.verify(rw, r)
+
+		if !a {
+			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		user, err := s.userData(rw, r)
+		if err != nil {
+			return
+		}
+
+		if user.Teams[len(user.Teams)-1].Date.Truncate(24*time.Hour) == time.Now().UTC().Truncate(24*time.Hour) {
+			data.TodaysTeam = true
+		} else {
+			for i := 0; i < len(user.CardsCollection); i++ {
+				for in := 0; in < len(user.CardsCollection[i]); in++ {
+					user.CardsCollection[i][in].CutId = user.CardsCollection[i][in].Id.Hex()
+				}
+			}
+			for i := 0; i < 3; i++ {
+				data.CorePlayers = append(data.CorePlayers, user.CardsCollection)
+			}
+			for i := 0; i < 2; i++ {
+				data.SupPlayers = append(data.SupPlayers, user.CardsCollection)
+			}
+		}
+		data.User = user
+		if err := tpl.Execute(rw, data); err != nil {
+			s.logger.Info(err)
+		}
+	}
+}
+
+func (s *Server) setFantasyTeam() http.HandlerFunc {
+	type respond struct {
+		AcssesToken  string              `json:"acsses_token"`
+		RefreshToken string              `json:"refresh_token"`
+		Team         []models.PlayerCard `json:"team"`
+	}
+	return func(rw http.ResponseWriter, r *http.Request) {
+		cook := r.Cookies()
+		r.ParseForm()
+		resp := respond{
+			AcssesToken:  cook[0].Value,
+			RefreshToken: cook[1].Value,
+		}
+
+		user, err := s.userData(rw, r)
+		if err != nil {
+			return
+		}
+
+		for i := 0; i < len(user.CardsCollection); i++ {
+			for _, v := range r.Form {
+				for in := 0; in < len(user.CardsCollection[i]); in++ {
+					if v[0] == user.CardsCollection[i][in].Id.Hex() {
+						resp.Team = append(resp.Team, user.CardsCollection[i][in])
+					}
+				}
+			}
+		}
+
+		res, err := s.request("http://localhost:8080/auth/setFantasyTeam", "POST", resp)
+		if err != nil {
+			s.logger.Info(err)
+			http.Redirect(rw, r, "/", http.StatusFound)
+			return
+		}
+		defer res.Body.Close()
+		http.Redirect(rw, r, "/fantasyTeams", http.StatusFound)
+	}
+}
+
 func (s *Server) userData(rw http.ResponseWriter, r *http.Request) (*models.User, error) {
 	a, token := s.verify(rw, r)
 	user := &models.User{}
@@ -404,6 +502,7 @@ func (s *Server) logOut() http.HandlerFunc {
 
 func (s *Server) request(url string, method string, data interface{}) (*http.Response, error) {
 	b, _ := json.Marshal(data)
+	// fmt.Print(string(b))
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(b))
 	if err != nil {

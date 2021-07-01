@@ -4,9 +4,10 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type PlayerCard struct {
 	Id          primitive.ObjectID `bson:"_id" json:"id"`
+	CutId       string             `json:"cut_id"`
 	AccountId   int                `bson:"account_id" json:"account_id"`
 	Name        string             `bson:"name" json:"name"`
-	FantacyRole int                `bson:"fantasy_role" json:"fantasy_role"`
+	FantasyRole int                `bson:"fantasy_role" json:"fantasy_role"`
 	Team        string             `bson:"team" json:"team_name"`
 	Rarity      int                `json:"rarity"`
 

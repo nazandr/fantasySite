@@ -1,0 +1,105 @@
+{{template "header" . }}
+<style>
+    .text-title {
+        color: #ffffffb5 !important;
+    }
+
+    .card-img-overlay {
+        background-color: rgba(101, 105, 109, 0.205);
+    }
+
+    .bg-transparent {
+        background-color: #00000080 !important;
+    }
+</style>
+<section>
+    <div class="container-xxl  my-5">
+        {{if not .TodaysTeam}}
+        <form class="was-validated" action="/setFantasyTeam" method="post">
+            <div class="row">
+                <div class="col-md-7  mt-2 ">
+                    <h5>Коры</h5>
+                    <div class="row">
+                        {{range $index, $player := .CorePlayers}}
+                        <div class="col">
+                            <select name="Sup{{ $index }}" required class=" form-select">
+                                <option value="" selected>Выбрать...</option>
+                                {{range $player }}
+                                {{range . }}
+                                {{if eq .FantasyRole 1}}
+                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}} {{ range .Buffs}}
+                                    {{.DisplayedName}}: +{{.Multiplier}}%
+                                    {{end}}
+                                </option>
+                                {{end}}
+                                {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="col-md-5 mt-2">
+                    <h5>Саппорты</h5>
+                    <div class="row">
+                        {{range $index, $player := .SupPlayers}}
+                        <div class="col">
+                            <select name="Core{{ $index }}" required class=" form-select">
+                                <option value="" selected>Выбрать...</option>
+                                {{range $player }}
+                                {{range . }}
+                                {{if eq .FantasyRole 2}}
+                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}} {{ range .Buffs}}
+                                    {{.DisplayedName}}: +{{.Multiplier}}%
+                                    {{end}}
+                                </option>
+                                {{end}}
+                                {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-1">
+                    <button type="submit" class="btn btn-outline-success mt-3 ">Закрепить</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {{end}}
+    <div class="container-xxl my-3 pt-3">
+        {{range .User.Teams }}
+        <div class="row border border-2 rounded rounded-3 border-light mb-3 mx-1 py-1">
+            <h4>{{.Date.Format "02 03 2006"}}</h4>
+            {{range .Team }}
+            {{template "fantasyTeamCard" . }}
+            {{end}}
+            <h5>{{.Total}}</h5>
+        </div>
+        {{end}}
+    </div>
+
+
+</section>
+
+<script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('select').on('change', function (event) {
+            //restore previously selected value
+            var prevValue = $(this).data('previous');
+            $('select').not(this).find('option[id="' + prevValue + '"]').show();
+            //hide option selected                
+            var value = $(this).children(":selected").attr("id");
+            //update previously selected data
+            $(this).data('previous', value);
+            $('select').not(this).find('option[id="' + value + '"]').hide();
+        });
+    });
+</script>
+
+{{template "footer" . }}

@@ -11,13 +11,14 @@
             </div>
         </div>
     </div>
-
-    <div class="row ">
-        {{ if .Open }}
-        {{ range .Pack}}
-        {{template "card" . }}
-        {{end}}
-        {{end}}
+    <div class="container-xxl  my-5">
+        <div class="row ">
+            {{ if .Open }}
+            {{ range .Pack}}
+            {{template "card" . }}
+            {{end}}
+            {{end}}
+        </div>
     </div>
 </section>
 {{template "footer" . }}

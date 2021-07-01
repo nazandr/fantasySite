@@ -14,7 +14,7 @@ type User struct {
 	FantacyCoins      int                `bson:"fantasy_coins" json:"fantacy_coins"`
 	Packs             PacksCount
 	CardsCollection   [][]PlayerCard `bson:"card_collection"`
-	Teams             []FantacyTeam
+	Teams             []FantasyTeam
 }
 
 type PacksCount struct {
@@ -22,8 +22,14 @@ type PacksCount struct {
 	Special int `bson:"special" json:"special"`
 }
 
-type FantacyTeam struct {
-	ID   primitive.ObjectID `bson:"_id" json:"id"`
-	Date time.Time          `bson:"date" json:"date"`
-	Team []PlayerCard       `bosn:"team" json:"team"`
+type FantasyTeam struct {
+	ID    primitive.ObjectID `bson:"_id" json:"id"`
+	Date  time.Time          `bson:"date" json:"date"`
+	Team  []Player           `bosn:"team" json:"team"`
+	Total float32            `bson:"total" json:"total"`
+}
+
+type Player struct {
+	PlayerCard PlayerCard
+	Points     float32
 }
