@@ -27,7 +27,8 @@
                                 {{range $player }}
                                 {{range . }}
                                 {{if eq .FantasyRole 1}}
-                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}} {{ range .Buffs}}
+                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}}:_ {{ .Team}}{{ if .Buffs}}:_
+                                    {{end}} {{ range .Buffs}}
                                     {{.DisplayedName}}: +{{.Multiplier}}%
                                     {{end}}
                                 </option>
