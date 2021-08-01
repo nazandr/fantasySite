@@ -280,6 +280,7 @@ func (s *Server) fantasyTeams() http.HandlerFunc {
 			User        *models.User
 			Auth        bool
 			TodaysTeam  bool
+			MidPlayers  [][][]models.PlayerCard
 			CorePlayers [][][]models.PlayerCard
 			SupPlayers  [][][]models.PlayerCard
 		}{
@@ -306,6 +307,9 @@ func (s *Server) fantasyTeams() http.HandlerFunc {
 		}
 		user.Teams = a
 
+		if len(user.Teams) == 0 {
+			user.Teams = make([]models.FantasyTeam, 1)
+		}
 		if user.Teams[0].Date.Truncate(24*time.Hour) == time.Now().UTC().Truncate(24*time.Hour) {
 			data.TodaysTeam = true
 		} else {
@@ -314,7 +318,10 @@ func (s *Server) fantasyTeams() http.HandlerFunc {
 					user.CardsCollection[i][in].CutId = user.CardsCollection[i][in].Id.Hex()
 				}
 			}
-			for i := 0; i < 3; i++ {
+			for i := 0; i < 1; i++ {
+				data.MidPlayers = append(data.MidPlayers, user.CardsCollection)
+			}
+			for i := 0; i < 2; i++ {
 				data.CorePlayers = append(data.CorePlayers, user.CardsCollection)
 			}
 			for i := 0; i < 2; i++ {

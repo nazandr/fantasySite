@@ -20,6 +20,24 @@
                 <div class="col-md-7  mt-2 ">
                     <h5>Коры</h5>
                     <div class="row">
+                        {{range $index, $player := .MidPlayers}}
+                        <div class="col">
+                            <select name="Mid{{ $index }}" required class=" form-select">
+                                <option value="" selected>Выбрать...</option>
+                                {{range $player }}
+                                {{range . }}
+                                {{if eq .FantasyRole 4}}
+                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}}:_ {{ .Team}}{{ if .Buffs}}:_
+                                    {{end}} {{ range .Buffs}}
+                                    {{.DisplayedName}}: +{{.Multiplier}}%
+                                    {{end}}
+                                </option>
+                                {{end}}
+                                {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        {{end}}
                         {{range $index, $player := .CorePlayers}}
                         <div class="col">
                             <select name="Sup{{ $index }}" required class=" form-select">
@@ -50,7 +68,8 @@
                                 {{range $player }}
                                 {{range . }}
                                 {{if eq .FantasyRole 2}}
-                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}} {{ range .Buffs}}
+                                <option id={{.AccountId}} value={{ .CutId}}>{{.Name}}:_ {{ .Team}}{{ if .Buffs}}:_
+                                    {{end}} {{ range .Buffs}}
                                     {{.DisplayedName}}: +{{.Multiplier}}%
                                     {{end}}
                                 </option>
